@@ -1,6 +1,12 @@
 package main
 
-import "flag"
+import (
+	"crypto/tls"
+	"crypto/x509"
+	"flag"
+	"io/ioutil"
+	"log"
+)
 
 var (
 	tls_certificate = flag.String("cert",
@@ -22,4 +28,21 @@ var (
 
 func main() {
 	flag.Parse()
+	cert, err := tls.LoadX509KeyPair(*tls_certificate, *tls_key)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	caFile, err := ioutil.ReadFile(*tls_ca)
+	if err != nil {
+		log.Fatal(err)
+	}
+	stackOfCA := x509.NewCertPool()
+	stackOfCA.AppendCertsFromPEM(caFile)
+
+	tlsContext := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      stackOfCA,
+	}
+	tlsContext.BuildNameToCertificate()
 }
