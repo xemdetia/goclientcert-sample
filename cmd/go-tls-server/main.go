@@ -41,8 +41,10 @@ func main() {
 	stackOfCA.AppendCertsFromPEM(caFile)
 
 	tlsContext := &tls.Config{
-		Certificates: []tls.Certificate{cert},
-		RootCAs:      stackOfCA,
+		Certificates:           []tls.Certificate{cert},
+		RootCAs:                stackOfCA,
+		SessionTicketsDisabled: true, // TLS tickets are outside of scope
+		MinVersion:             tls.VersionTLS12,
 	}
 	tlsContext.BuildNameToCertificate()
 }
