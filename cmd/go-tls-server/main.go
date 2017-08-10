@@ -56,6 +56,7 @@ func main() {
 	}
 
 	// Make a copy of the http.Server with the config set
+	http.HandleFunc("/", handler)
 	server := &http.Server{
 		Addr:      "127.0.0.1:4443",
 		TLSConfig: tlsContext,
