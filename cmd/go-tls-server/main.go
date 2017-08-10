@@ -33,6 +33,20 @@ func handler(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte("This is an example server.\n"))
 }
 
+// Handler for client cert to check against
+func certHandler(w http.ResponseWriter, req *http.Request) {
+	if len(req.TLS.VerifiedChains) < 1 {
+		w.WriteHeader(http.StatusForbidden)
+		w.Write([]byte("Forbidden.\n"))
+		return // No chain? Abort
+	}
+	for _, chain := range req.TLS.VerifiedChains {
+		for _, cert := range chain {
+			w.Write([]byte(cert.Subject.CommonName + "\n"))
+		}
+	}
+}
+
 func main() {
 	flag.Parse()
 	cert, err := tls.LoadX509KeyPair(*tls_certificate, *tls_key)
@@ -57,6 +71,7 @@ func main() {
 
 	// Make a copy of the http.Server with the config set
 	http.HandleFunc("/", handler)
+	http.HandleFunc("/cert", certHandler)
 	server := &http.Server{
 		Addr:      "127.0.0.1:4443",
 		TLSConfig: tlsContext,
