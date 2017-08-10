@@ -61,9 +61,17 @@ func main() {
 	stackOfCA := x509.NewCertPool()
 	stackOfCA.AppendCertsFromPEM(caFile)
 
+	clientCaFile, err := ioutil.ReadFile(*tls_ca)
+	if err != nil {
+		log.Fatal(err)
+	}
+	stackOfClientCA := x509.NewCertPool()
+	stackOfClientCA.AppendCertsFromPEM(clientCaFile)
+
 	tlsContext := &tls.Config{
 		Certificates:           []tls.Certificate{cert},
 		RootCAs:                stackOfCA,
+		ClientCAs:              stackOfClientCA,
 		SessionTicketsDisabled: true, // TLS tickets are outside of scope
 		MinVersion:             tls.VersionTLS12,
 		ClientAuth:             tls.VerifyClientCertIfGiven,
