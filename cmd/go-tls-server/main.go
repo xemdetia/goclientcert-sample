@@ -6,6 +6,7 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"net/http"
 )
 
 var (
@@ -26,6 +27,12 @@ var (
 		"Regex expression passed in to match the subject or subjectAltName of a certificate. By default it matches everything.")
 )
 
+// Pulled from golang documentation
+func handler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte("This is an example server.\n"))
+}
+
 func main() {
 	flag.Parse()
 	cert, err := tls.LoadX509KeyPair(*tls_certificate, *tls_key)
@@ -45,6 +52,13 @@ func main() {
 		RootCAs:                stackOfCA,
 		SessionTicketsDisabled: true, // TLS tickets are outside of scope
 		MinVersion:             tls.VersionTLS12,
+		ClientAuth:             tls.VerifyClientCertIfGiven,
 	}
-	tlsContext.BuildNameToCertificate()
+
+	// Make a copy of the http.Server with the config set
+	server := &http.Server{
+		Addr:      "127.0.0.1:4443",
+		TLSConfig: tlsContext,
+	}
+	server.ListenAndServeTLS(*tls_certificate, *tls_key)
 }
